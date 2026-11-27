@@ -4,8 +4,8 @@ A web-based hostel order pooling system that helps hostel students combine their
 
 ## Project Members
 
-1. **Abhinav Verma** — Roll No. 2026071104
-2. **Adarsh Gupta** — Roll No. 2026071105
+1. **Adarsh Gupta** — Roll No. 2026071105
+2. **Abhinav Verma** — Roll No. 2026071104
 3. **Kaushal Kumar** — Roll No. 2026071133
 4. **Kushagra Upadhyay** — Roll No. 2026071135
 
