@@ -73,3 +73,55 @@ function notify_user(
     );
     $s->execute([$userId,$groupId,$title,$message]);
 }
+
+function expire_manual_requests(): void {
+    $pdo = db();
+    $pdo->beginTransaction();
+
+    try {
+        $s = $pdo->query("SELECT * FROM manual_requests WHERE status='Pending' AND expires_at<=NOW() FOR UPDATE");
+        $expired = $s->fetchAll();
+
+        foreach ($expired as $r) {
+            if (!empty($r['order_id'])) {
+                $d = $pdo->prepare('DELETE FROM orders WHERE id=?');
+                $d->execute([$r['order_id']]);
+            }
+
+            $gid = (int)($r['group_id'] ?? 0);
+
+            if ($gid) {
+                $c = $pdo->prepare("SELECT COUNT(*) FROM manual_requests WHERE group_id=? AND status='Pending' AND expires_at>NOW() AND user_id=?");
+                $c->execute([$gid, $r['user_id']]);
+
+                if (!(int)$c->fetchColumn()) {
+                    $d = $pdo->prepare('DELETE FROM group_members WHERE group_id=? AND user_id=?');
+                    $d->execute([$gid, $r['user_id']]);
+                }
+
+                $m = $pdo->prepare('SELECT COUNT(*) FROM group_members WHERE group_id=?');
+                $m->execute([$gid]);
+
+                if (!(int)$m->fetchColumn()) {
+                    $u = $pdo->prepare("UPDATE app_groups SET status='Failed' WHERE id=? AND status='Open'");
+                    $u->execute([$gid]);
+                } else {
+                    $t = $pdo->prepare('SELECT MIN(threshold_value) FROM group_members WHERE group_id=?');
+                    $t->execute([$gid]);
+                    $target = (float)$t->fetchColumn();
+
+                    $u = $pdo->prepare('UPDATE app_groups SET target_threshold=? WHERE id=?');
+                    $u->execute([$target, $gid]);
+                }
+            }
+
+            $u = $pdo->prepare("UPDATE manual_requests SET status='Failed' WHERE id=?");
+            $u->execute([$r['id']]);
+        }
+
+        $pdo->commit();
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        throw $e;
+    }
+}
