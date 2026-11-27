@@ -98,7 +98,8 @@ The project uses MySQL to store student information, orders, groups and notifica
 
 The database structure is available in the `hostel_ordering.sql` file.
 
+
 ## License
 
-This project is intended for academic and educational purposes.
-
+This project is licensed under the MIT License.
+See the [LICENSE](LICENSE) file for details.
