@@ -1,0 +1,7 @@
+# Protect database configuration
+config.php
+
+# Temporary and backup files
+*.log
+*.tmp
+*.bak
